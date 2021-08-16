@@ -9,6 +9,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/tbuchaillot/discord-bot-dnd/command"
+	"github.com/tbuchaillot/discord-bot-dnd/session"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -20,7 +21,10 @@ func init() {
 	flag.Parse()
 }
 
+var mainSession *session.Session
+
 func main() {
+	mainSession = session.NewSession()
 
 	//Creamos una Discord session usando el token
 	dg, err := discordgo.New("Bot " + Token)
@@ -50,7 +54,6 @@ func main() {
 }
 
 func messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
-
 	//Si el mensaje es del bot, lo ignoramos
 	if m.Author.ID == s.State.SessionID {
 		return
@@ -60,11 +63,37 @@ func messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if !strings.HasPrefix(cmd, "!") {
 		return
 	}
+	if mainSession == nil {
+		s.ChannelMessageSend(m.ChannelID, ":x: Por favor empieza una partida usando **!empezar <nombre_partida>.**")
+		return
+	}
 
 	switch {
+	case strings.HasPrefix(cmd, command.HELPCMD_1), strings.HasPrefix(cmd, command.HELPCMD_2):
+		command.HelpHandler(mainSession, s, m)
+	case strings.HasPrefix(cmd, command.STARTSESSIONCMD):
+		command.StartSessionHandler(mainSession, s, m)
+	case strings.HasPrefix(cmd, command.STOPSESSIONCMD):
+		command.EndSessionHandler(mainSession, s, m)
+		mainSession = session.NewSession()
 	case strings.HasPrefix(cmd, command.ROLLCMD):
-		command.RollHandler(s, m)
+		if !mainSession.IsValid(s, m) {
+			return
+		}
+		command.RollHandler(mainSession, s, m)
+	case strings.HasPrefix(cmd, command.SPELLCMD):
+		if !mainSession.IsValid(s, m) {
+			return
+		}
+		command.SpellHandler(mainSession, s, m)
+	case strings.HasPrefix(cmd, command.HELLOCMD):
+		command.HelloHandler(mainSession, s, m)
+	case strings.HasPrefix(cmd, command.CREATECHAR):
+		command.CreateCharHandler(mainSession, s, m)
+	case strings.HasPrefix(cmd, command.GETCHARCMD):
+		command.GetCharHandler(mainSession, s, m)
 	default:
-		log.Info("Command " + cmd + " no implementado")
+		log.Info("Comando " + cmd + " no implementado")
+
 	}
 }

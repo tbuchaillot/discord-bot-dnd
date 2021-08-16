@@ -8,34 +8,38 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/tbuchaillot/discord-bot-dnd/session"
 
 	"github.com/bwmarrin/discordgo"
 )
 
-const ROLLCMD = "!roll"
-const ROLLCMD_HELP = "Como se usa? !rollX Y \nDonde X=numero de caras Y=numero de dados"
-
 //RollHandler !roll command rollea un dado de
-func RollHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+func RollHandler(sess *session.Session, s *discordgo.Session, m *discordgo.MessageCreate) {
 	rand.Seed(time.Now().Unix())
 
 	valid, dices, faces := getDiceInfo(m.Content)
 	if !valid {
-		msg := "Error con el commando: " + m.Content + " \n" + ROLLCMD_HELP
+		msg := ":x: Error con el commando: " + m.Content + " \n" + ROLLCMD_HELP
 		s.ChannelMessageSend(m.ChannelID, msg)
 		return
 	}
-	msg := m.Author.Username + " tiro " + fmt.Sprint(dices) + " dado"
+	msg := "**" + sess.Active[m.Author.ID].Nombre + "** tiro **" + fmt.Sprint(dices) + "** dado"
 	if dices > 1 {
 		msg += "s"
 	}
-	msg += "..."
-
+	msg += ":game_die:..."
 	s.ChannelMessageSend(m.ChannelID, msg)
+
+	if dices >= 10 {
+		msg = ":x: " + m.Author.Username + " esta re loco y quiere tirar demasiados dados..."
+		s.ChannelMessageSend(m.ChannelID, msg)
+		return
+	}
+
 	for i := 1; i <= dices; i++ {
 		randDado := rand.Intn(faces) + 1
 
-		msg := "El dado " + fmt.Sprint(i) + " salio " + fmt.Sprint(randDado)
+		msg := ":game_die: El dado " + fmt.Sprint(i) + " salio **" + fmt.Sprint(randDado) + "**"
 
 		randomSleep := rand.Intn(i * 500)
 		time.Sleep(time.Duration(randomSleep * int(time.Millisecond)))
