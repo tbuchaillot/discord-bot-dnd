@@ -8,13 +8,13 @@ import (
 func HelpHandler(sess *session.Session, s *discordgo.Session, m *discordgo.MessageCreate) {
 	msg := "**Comandos disponibles** \n" +
 		"**" + HELLOCMD + "**\n" +
-		"\n" +
+		"**Partida:**\n" +
 		"**" + STARTSESSIONCMD + "**\n" +
 		"**" + STOPSESSIONCMD + "**\n" +
-		"\n" +
+		"**Personaje:**\n" +
 		"**" + CREATECHAR + "**\n" +
 		"**" + GETCHARCMD + "**\n" +
-		"\n" +
+		"**Acciones:**\n" +
 		"**" + ROLLCMD + "**\n" +
 		"**" + SPELLCMD + "**\n"
 
